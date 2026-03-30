@@ -25,4 +25,28 @@ public class ArtifactType {
     private List<ArtifactType> children = new ArrayList<>();
 
     // getters, setters
+    public String getTypeId() {
+        return typeId;
+    }
+    public void setTypeId(String typeId) {
+        this.typeId = typeId;
+    }
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    public ArtifactType getParentType() {
+        return parentType;
+    }
+    public void setParentType(ArtifactType parentType) {
+        this.parentType = parentType;
+    }
+    public List<ArtifactType> getChildren() {
+        return children;
+    }
+    public void setChildren(List<ArtifactType> children) {
+        this.children = children;
+    }
 }

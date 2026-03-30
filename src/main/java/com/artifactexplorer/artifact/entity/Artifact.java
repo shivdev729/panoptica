@@ -1,7 +1,6 @@
 package com.artifactexplorer.artifact.entity;
 
-import jakarta.persistence.*;
-
+import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import com.artifactexplorer.dynasty.entity.Dynasty;
@@ -9,6 +8,24 @@ import com.artifactexplorer.museum.entity.Museum;
 import com.artifactexplorer.deity.entity.Deity;
 import com.artifactexplorer.common.ArtifactStatus;
 import com.artifactexplorer.common.AuditFields;
+
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.Id;
+import jakarta.persistence.Column;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.FetchType;
+
+import jakarta.persistence.Embedded;
 
 
 // artifact/entity/Artifact.java
@@ -58,16 +75,76 @@ public class Artifact {
     )
     private Set<Deity> depictedDeities = new HashSet<>();
 
-    @ManyToMany
-    @JoinTable(
-        name = "ruled",
-        joinColumns = @JoinColumn(name = "dynasty_id"),   // through dynasty
-        inverseJoinColumns = @JoinColumn(name = "region_id")
-    )
-    // Note: ruled is on dynasty, not artifact — see Dynasty entity below
-
     @Embedded
     private AuditFields audit = new AuditFields();
 
+    @PrePersist
+    void onCreate() {
+        OffsetDateTime now = OffsetDateTime.now();
+        audit.setCreatedAt(now);
+        audit.setUpdatedAt(now);
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        audit.setUpdatedAt(OffsetDateTime.now());
+    }
     // getters, setters
+    public String getArtifactId() {
+        return artifactId;
+    }
+    public void setArtifactId(String artifactId) {
+        this.artifactId = artifactId;
+    }
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    public String getDescription() {
+        return description;
+    }
+    public void setDescription(String description) {
+        this.description = description;
+    }
+    public ArtifactType getType() {
+        return type;
+    }
+    public void setType(ArtifactType type) {
+        this.type = type;
+    }
+    public Dynasty getDynasty() {
+        return dynasty;
+    }
+    public void setDynasty(Dynasty dynasty) {
+        this.dynasty = dynasty;
+    }
+    public Museum getMuseum() {
+        return museum;
+    }
+    public void setMuseum(Museum museum) {
+        this.museum = museum;
+    }
+    public ArtifactStatus getStatus() {
+        return status;
+    }
+    public void setStatus(ArtifactStatus status) {
+        this.status = status;
+    }
+    public Set<String> getMaterials() {
+        return materials;
+    }
+    public void setMaterials(Set<String> materials) {
+        this.materials = materials;
+    }
+    public Set<Deity> getDepictedDeities() {
+        return depictedDeities;
+    }
+    public void setDepictedDeities(Set<Deity> depictedDeities) {
+        this.depictedDeities = depictedDeities;
+    }
+    public AuditFields getAudit() {
+        return audit;
+    }
 }

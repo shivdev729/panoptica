@@ -810,6 +810,7 @@ a{text-decoration:none;color:inherit;cursor:pointer}
       <div class="admin-nav-item" id="asec-btn-artefacts" onclick="showAdminSection('artefacts')">🗿 Artefacts</div>
       <div class="admin-nav-item" id="asec-btn-dynasties" onclick="showAdminSection('dynasties')">🏰 Dynasties</div>
       <div class="admin-nav-item" id="asec-btn-deities" onclick="showAdminSection('deities')">🕉️ Deities</div>
+      <div class="admin-nav-item" id="asec-btn-exhibits" onclick="showAdminSection('exhibits')">🎪 Exhibits</div>
       <div class="admin-nav-sep"></div>
       <div style="padding:0.5rem 1.4rem;font-size:0.58rem;letter-spacing:0.13em;text-transform:uppercase;color:rgba(255,255,255,0.25);font-weight:700">Staff</div>
       <div class="admin-nav-item" id="asec-btn-users" onclick="showAdminSection('users')">👤 Users</div>
@@ -833,6 +834,7 @@ a{text-decoration:none;color:inherit;cursor:pointer}
           <div class="astat"><span class="astat-num" id="dash-artefact-count">0</span><span class="astat-lbl">🗿 Artefacts</span></div>
           <div class="astat"><span class="astat-num" id="dash-dynasty-count">0</span><span class="astat-lbl">🏰 Dynasties</span></div>
           <div class="astat"><span class="astat-num" id="dash-deity-count">0</span><span class="astat-lbl">🕉️ Deities</span></div>
+          <div class="astat"><span class="astat-num" id="dash-exhibit-count">0</span><span class="astat-lbl">🎪 Exhibits</span></div>
           <div class="astat"><span class="astat-num" id="dash-user-count">0</span><span class="astat-lbl">👤 Staff Users</span></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
@@ -842,6 +844,7 @@ a{text-decoration:none;color:inherit;cursor:pointer}
               <button class="btn btn-gold" style="justify-content:flex-start" onclick="showAdminSection('artefacts');setTimeout(()=>openArtefactForm(),100)">＋ Add New Artefact</button>
               <button class="btn btn-primary" style="justify-content:flex-start" onclick="showAdminSection('dynasties');setTimeout(()=>openDynastyForm(),100)">＋ Add New Dynasty</button>
               <button class="btn btn-outline" style="justify-content:flex-start" onclick="showAdminSection('deities');setTimeout(()=>openDeityForm(),100)">＋ Add New Deity</button>
+              <button class="btn btn-outline" style="justify-content:flex-start;border-color:var(--terra);color:var(--terra)" onclick="showAdminSection('exhibits');setTimeout(()=>openExhibitForm(),100)">＋ Add New Exhibit</button>
             </div>
           </div>
           <div class="chart-card">
@@ -918,6 +921,28 @@ a{text-decoration:none;color:inherit;cursor:pointer}
             <tbody id="admin-users-tbody"></tbody>
           </table>
         </div>
+      </div>
+
+      <!-- EXHIBITS CRUD -->
+      <div class="admin-section" id="asec-exhibits">
+        <div class="admin-topbar">
+          <div class="admin-title">Exhibits</div>
+          <button class="btn btn-gold" onclick="openExhibitForm()">＋ Add Exhibit</button>
+        </div>
+        <div class="search-bar-admin">
+          <input type="text" placeholder="Search exhibits…" id="admin-exh-search" oninput="renderAdminExhibits()"/>
+          <select id="admin-exh-status" onchange="renderAdminExhibits()" style="padding:0.52rem 0.75rem;border:1.5px solid var(--border);border-radius:6px;font-family:var(--font-u);font-size:0.85rem;background:var(--white);color:var(--text);outline:none">
+            <option value="">All Statuses</option>
+            <option>Active</option><option>Upcoming</option><option>Closed</option><option>Cancelled</option>
+          </select>
+        </div>
+        <div class="crud-table-wrap">
+          <table class="crud-table">
+            <thead><tr><th>ID</th><th>Title</th><th>Museum</th><th>Starts On</th><th>Ends On</th><th>Recurring</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="admin-exhibits-tbody"></tbody>
+          </table>
+        </div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:0.75rem" id="admin-exh-count"></div>
       </div>
 
     </main>
@@ -1003,6 +1028,46 @@ a{text-decoration:none;color:inherit;cursor:pointer}
       <div class="form-actions">
         <button class="login-cancel" style="width:auto;padding:0.55rem 1.2rem" onclick="document.getElementById('deity-modal').classList.remove('open')">Cancel</button>
         <button class="btn-save" onclick="saveDeity()">Save Deity</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EXHIBIT FORM MODAL -->
+<div class="crud-modal-overlay" id="exhibit-modal">
+  <div class="crud-modal" style="max-width:600px">
+    <div class="crud-modal-head">
+      <h3 id="exhibit-modal-title">Add Exhibit</h3>
+      <button class="close-btn" style="position:static;background:rgba(255,255,255,0.12);color:#fff" onclick="document.getElementById('exhibit-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="crud-modal-body">
+      <div class="form-grid">
+        <div class="fgrp full"><label>Title</label><input id="exf-title" type="text" placeholder="Exhibit title…"/></div>
+        <div class="fgrp full"><label>Description</label><textarea id="exf-desc" placeholder="Brief description of the exhibit…"></textarea></div>
+        <div class="fgrp full"><label>Museum</label><input id="exf-museum" type="text" placeholder="Museum name…"/></div>
+        <div class="fgrp"><label>Starts On</label><input id="exf-start" type="date"/></div>
+        <div class="fgrp"><label>Ends On</label><input id="exf-end" type="date"/></div>
+        <div class="fgrp"><label>Status</label>
+          <select id="exf-status">
+            <option>Active</option>
+            <option>Upcoming</option>
+            <option>Closed</option>
+            <option>Cancelled</option>
+          </select>
+        </div>
+        <div class="fgrp" style="justify-content:center">
+          <label>Is Recurring?</label>
+          <div style="display:flex;align-items:center;gap:0.75rem;padding:0.55rem 0">
+            <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;color:var(--text);text-transform:none;letter-spacing:0;font-weight:400;cursor:pointer">
+              <input type="checkbox" id="exf-recurring" style="width:16px;height:16px;accent-color:var(--gold);cursor:pointer"/>
+              Yes, this exhibit recurs
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="login-cancel" style="width:auto;padding:0.55rem 1.2rem" onclick="document.getElementById('exhibit-modal').classList.remove('open')">Cancel</button>
+        <button class="btn-save" onclick="saveExhibit()">Save Exhibit</button>
       </div>
     </div>
   </div>
@@ -1129,6 +1194,16 @@ const MATERIALS = [
   {mat:"Marble",    count:2,  ico:"⬡"},
   {mat:"Terracotta",count:2,  ico:"🏺"},
 ];
+
+let EXHIBITS = [
+  {exID:"EX001", title:"Chola Bronze Masterworks",          desc:"An immersive showcase of rare Chola bronze sculptures spanning the 9th–12th centuries, tracing the evolution of lost-wax casting.",   museum:"Chennai Government Museum",   startOn:"2025-01-15", endOn:"2025-06-30", isRecurring:false, status:"Closed"},
+  {exID:"EX002", title:"Gupta: The Golden Age",             desc:"A survey of Gupta-period stone sculptures and numismatics celebrating India's classical artistic zenith.",                             museum:"National Museum, New Delhi",  startOn:"2025-03-01", endOn:"2025-09-30", isRecurring:true,  status:"Closed"},
+  {exID:"EX003", title:"Sacred Scripts — Brahmi & Beyond",  desc:"Epigraphic records in Brahmi, Kharosthi, and early Devanagari scripts from Mauryan edicts to medieval copper-plate grants.",          museum:"Indian Museum, Kolkata",      startOn:"2025-07-10", endOn:"2025-12-20", isRecurring:false, status:"Closed"},
+  {exID:"EX004", title:"Ritual Objects of the Deccan",      desc:"A curated display of ritual lamps, yantras, and ceremonial vessels from Chalukya and Rashtrakuta contexts.",                          museum:"Chhatrapati Shivaji Maharaj Vastu Sangrahalaya", startOn:"2026-01-20", endOn:"2026-05-31", isRecurring:false, status:"Active"},
+  {exID:"EX005", title:"Numismatics of Ancient India",      desc:"Gold, silver, and copper punch-marked coins, Kushana gold dinars, and Vijayanagara pagodas spanning 2500 years of coinage.",          museum:"RBI Monetary Museum, Mumbai", startOn:"2026-04-01", endOn:"2026-10-15", isRecurring:true,  status:"Upcoming"},
+  {exID:"EX006", title:"Buddhist Art Along the Silk Road",  desc:"Gandharan schist sculptures, terracotta votive tablets, and Pala bronzes tracing Buddhist iconography from Taxila to Nalanda.",       museum:"Patna Museum",                startOn:"2026-06-01", endOn:"2026-11-30", isRecurring:false, status:"Upcoming"},
+];
+let exhibitCounter = 7;
 
 // PAGE NAV
 function showPage(id) {
@@ -1459,6 +1534,7 @@ function showAdminSection(sec) {
   document.querySelectorAll('.admin-nav-item').forEach(b => b.classList.remove('active'));
   document.getElementById('asec-' + sec).classList.add('active');
   document.getElementById('asec-btn-' + sec).classList.add('active');
+  if (sec === 'exhibits') renderAdminExhibits();
 }
 
 // DASHBOARD
@@ -1468,6 +1544,7 @@ function refreshDashboard() {
   document.getElementById('dash-artefact-count').textContent = ARTEFACTS.length;
   document.getElementById('dash-dynasty-count').textContent = DYNASTIES.length;
   document.getElementById('dash-deity-count').textContent = DEITIES.length;
+  document.getElementById('dash-exhibit-count').textContent = EXHIBITS.length;
   document.getElementById('dash-user-count').textContent = USERS.length;
 
   const types = ['Sculpture','Coin','Inscription','Ritual Object'];
@@ -1760,17 +1837,100 @@ function showToast(msg, err) {
   _toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// Patch showPage to guard admin
-const _origShowPage = showPage;
-window.showPage = function(id) {
-  if (id === 'admin' && !currentUser) { handleAdminNav(); return; }
-  _origShowPage(id);
-  // Keep admin nav item non-active (it's not a real page tab)
-  document.getElementById('nav-admin').classList.remove('active');
-  if (id === 'admin') {
-    document.getElementById('nav-admin').classList.add('active');
+// EXHIBITS CRUD
+let editingExhibitID = null;
+
+function statusBadgeClass(s) {
+  return {Active:'b-gold',Upcoming:'b-inscription',Closed:'b-mat',Cancelled:'b-ritual'}[s] || 'b-mat';
+}
+
+function renderAdminExhibits() {
+  const q      = (document.getElementById('admin-exh-search')?.value || '').toLowerCase();
+  const st     = document.getElementById('admin-exh-status')?.value || '';
+  const list   = EXHIBITS.filter(e =>
+    (!q  || e.title.toLowerCase().includes(q) || e.museum.toLowerCase().includes(q)) &&
+    (!st || e.status === st)
+  );
+  document.getElementById('admin-exhibits-tbody').innerHTML = list.map(e => `
+    <tr>
+      <td style="font-size:0.75rem;color:var(--muted);font-weight:700">${e.exID}</td>
+      <td style="font-family:var(--font-d);font-size:1rem;font-weight:600;color:var(--indigo);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.title}</td>
+      <td style="font-size:0.8rem;color:var(--muted)">${e.museum}</td>
+      <td style="font-size:0.8rem">${e.startOn || '—'}</td>
+      <td style="font-size:0.8rem">${e.endOn || '—'}</td>
+      <td style="text-align:center">${e.isRecurring
+        ? '<span class="badge b-gold" style="font-size:0.6rem">✓ Yes</span>'
+        : '<span class="badge b-mat" style="font-size:0.6rem">No</span>'
+      }</td>
+      <td><span class="badge ${statusBadgeClass(e.status)}">${e.status}</span></td>
+      <td><div class="crud-action-btns">
+        <button class="btn-edit" onclick="openExhibitForm('${e.exID}')">Edit</button>
+        <button class="btn-del"  onclick="deleteExhibit('${e.exID}')">Delete</button>
+      </div></td>
+    </tr>`).join('');
+  document.getElementById('admin-exh-count').textContent =
+    `Showing ${list.length} of ${EXHIBITS.length} exhibit${EXHIBITS.length !== 1 ? 's' : ''}`;
+}
+
+function openExhibitForm(exID) {
+  editingExhibitID = exID || null;
+  const e = exID ? EXHIBITS.find(x => x.exID === exID) : null;
+  document.getElementById('exhibit-modal-title').textContent = e ? 'Edit Exhibit' : 'Add Exhibit';
+  document.getElementById('exf-title').value     = e?.title     || '';
+  document.getElementById('exf-desc').value      = e?.desc      || '';
+  document.getElementById('exf-museum').value    = e?.museum    || '';
+  document.getElementById('exf-start').value     = e?.startOn   || '';
+  document.getElementById('exf-end').value       = e?.endOn     || '';
+  document.getElementById('exf-status').value    = e?.status    || 'Active';
+  document.getElementById('exf-recurring').checked = e?.isRecurring || false;
+  document.getElementById('exhibit-modal').classList.add('open');
+}
+
+function saveExhibit() {
+  const title = document.getElementById('exf-title').value.trim();
+  if (!title) { showToast('⚠️ Title is required.', true); return; }
+  const museum = document.getElementById('exf-museum').value.trim();
+  if (!museum) { showToast('⚠️ Museum is required.', true); return; }
+  const startOn = document.getElementById('exf-start').value;
+  const endOn   = document.getElementById('exf-end').value;
+  if (startOn && endOn && endOn < startOn) { showToast('⚠️ End date must be after start date.', true); return; }
+  const obj = {
+    exID:        editingExhibitID || ('EX' + String(exhibitCounter++).padStart(3, '0')),
+    title,
+    desc:        document.getElementById('exf-desc').value.trim(),
+    museum,
+    startOn,
+    endOn,
+    isRecurring: document.getElementById('exf-recurring').checked,
+    status:      document.getElementById('exf-status').value,
+  };
+  if (editingExhibitID) {
+    const idx = EXHIBITS.findIndex(e => e.exID === editingExhibitID);
+    EXHIBITS[idx] = obj;
+    showToast('✓ Exhibit updated.');
+  } else {
+    EXHIBITS.push(obj);
+    showToast('✓ Exhibit added.');
   }
-};
+  document.getElementById('exhibit-modal').classList.remove('open');
+  renderAdminExhibits();
+  refreshDashboard();
+}
+
+function deleteExhibit(exID) {
+  const ex = EXHIBITS.find(e => e.exID === exID);
+  if (!confirm(`Delete exhibit "${ex?.title}"?`)) return;
+  EXHIBITS = EXHIBITS.filter(e => e.exID !== exID);
+  renderAdminExhibits();
+  refreshDashboard();
+  showToast('🗑 Exhibit deleted.');
+}
+
+// Patch(Naya Added Kiye hai Exhibit Counter): init exhibit count on load
+window.addEventListener('DOMContentLoaded', () => {
+  const el = document.getElementById('dash-exhibit-count');
+  if (el) el.textContent = EXHIBITS.length;
+});
 
 </script>
 </body>

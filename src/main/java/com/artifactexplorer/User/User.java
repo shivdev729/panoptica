@@ -13,7 +13,6 @@ public class User {
     private Long uid;
 
     private String uname;
-    private String urole;
 
     public String getName(){
         return this.uname;

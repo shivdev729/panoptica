@@ -3,8 +3,6 @@ import java.time.OffsetDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 
 // common/AuditFields.java
 @Embeddable
@@ -22,13 +20,13 @@ public class AuditFields {
     @Column(name = "updated_by")
     private String updatedBy;
 
-    @PrePersist
-    void onCreate() {
-        createdAt = updatedAt = OffsetDateTime.now();
-    }
-
-    @PreUpdate
-    void onUpdate() {
-        updatedAt = OffsetDateTime.now();
-    }
+    // plain getters and setters only — no @PrePersist / @PreUpdate here
+    public OffsetDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(OffsetDateTime v) { createdAt = v; }
+    public OffsetDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(OffsetDateTime v) { updatedAt = v; }
+    public String getCreatedBy() { return createdBy; }
+    public void setCreatedBy(String v) { createdBy = v; }
+    public String getUpdatedBy() { return updatedBy; }
+    public void setUpdatedBy(String v) { updatedBy = v; }
 }

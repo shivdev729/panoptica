@@ -8,8 +8,11 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 
 import java.util.Set;
+import java.time.OffsetDateTime;
 import java.util.HashSet;
 
 import com.artifactexplorer.common.AuditFields;
@@ -36,6 +39,43 @@ public class Deity {
     @Embedded
     private AuditFields audit = new AuditFields();
 
+    @PrePersist
+    void onCreate() {
+        OffsetDateTime now = OffsetDateTime.now();
+        audit.setCreatedAt(now);
+        audit.setUpdatedAt(now);
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        audit.setUpdatedAt(OffsetDateTime.now());
+    }
+
     // getters, setters
+    public String getDeityId() {
+        return deityId;
+    }
+    public void setDeityId(String deityId) {
+        this.deityId = deityId;
+    }
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    public Set<String> getTraditions() {
+        return traditions;
+    }
+    public void setTraditions(Set<String> traditions) {
+        this.traditions = traditions;
+    }
+    public AuditFields getAudit() {
+        return audit;
+    }
+    public void setAudit(AuditFields audit) {
+        this.audit = audit;
+    }
+    
 }
 
