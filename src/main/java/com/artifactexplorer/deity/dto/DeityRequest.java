@@ -5,7 +5,6 @@ import java.util.Set;
 
 // deity/dto/DeityRequest.java
 public record DeityRequest(
-    @NotBlank String deityId,
     @NotBlank String name,
     Set<String> traditions
 ) {}

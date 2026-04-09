@@ -14,10 +14,10 @@ public class AuditFields {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
-    @Column(name = "created_by")
+    @Column(name = "created_by",updatable = false)
     private String createdBy;
 
-    @Column(name = "updated_by")
+    @Column(name = "updated_by",updatable = true)
     private String updatedBy;
 
     // plain getters and setters only — no @PrePersist / @PreUpdate here

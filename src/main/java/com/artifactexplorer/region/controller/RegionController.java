@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
 
 import com.artifactexplorer.region.dto.RegionRequest;
 import com.artifactexplorer.region.dto.RegionResponse;
@@ -47,8 +48,8 @@ public class RegionController {
     }
 
     @PostMapping
-    public ResponseEntity<RegionResponse> create(@Valid @RequestBody RegionRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(req));
+    public ResponseEntity<RegionResponse> create(@Valid @RequestBody RegionRequest req, Authentication auth) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(req, (String) auth.getPrincipal()));
     }
 
     @PutMapping("/{id}")

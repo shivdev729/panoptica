@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 
@@ -32,7 +33,7 @@ import com.artifactexplorer.artifact.entity.ArtifactType;
 import com.artifactexplorer.artifact.entity.ArtifactRevision;
 import com.artifactexplorer.artifact.service.ArtifactService;
 import com.artifactexplorer.artifact.repository.ArtifactTypeRepository;
-
+import com.artifactexplorer.common.IdGenerator;
 
 
 // artifact/controller/ArtifactController.java
@@ -43,6 +44,7 @@ public class ArtifactController {
 
     private final ArtifactService    artifactService;
     private final ArtifactTypeRepository typeRepo;
+    private final IdGenerator idGenerator;
 
     // ── Artifact CRUD ──────────────────────────────────────────
 
@@ -64,22 +66,22 @@ public class ArtifactController {
 
     @PostMapping
     public ResponseEntity<ArtifactResponse> create(
-            @Valid @RequestBody ArtifactRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(artifactService.create(req));
+            @Valid @RequestBody ArtifactRequest req,Authentication auth) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(artifactService.create(req,(String) auth.getPrincipal()));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ArtifactResponse> update(
             @PathVariable String id,
-            @Valid @RequestBody ArtifactRequest req) {
-        return ResponseEntity.ok(artifactService.update(id, req));
+            @Valid @RequestBody ArtifactRequest req,Authentication auth) {
+        return ResponseEntity.ok(artifactService.update(id, req,(String) auth.getPrincipal()));
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<ArtifactResponse> patch(
             @PathVariable String id,
-            @RequestBody Map<String, Object> fields) {
-        return ResponseEntity.ok(artifactService.patch(id, fields));
+            @RequestBody Map<String, Object> fields,Authentication auth) {
+        return ResponseEntity.ok(artifactService.patch(id, fields,(String) auth.getPrincipal()));
     }
 
     @DeleteMapping("/{id}")
@@ -110,7 +112,7 @@ public class ArtifactController {
     public ResponseEntity<ArtifactTypeResponse> createType(
             @Valid @RequestBody ArtifactTypeRequest req) {
         ArtifactType t = new ArtifactType();
-        t.setTypeId(req.typeId());
+        t.setTypeId(idGenerator.generate("TYP"));
         t.setName(req.name());
         if (req.parentTypeId() != null)
             t.setParentType(typeRepo.findById(req.parentTypeId())

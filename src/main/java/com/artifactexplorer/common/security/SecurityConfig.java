@@ -17,28 +17,43 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtFilter jwtFilter;
+        private final JwtFilter jwtFilter;
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(s -> s.sessionCreationPolicy(STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/admin/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET,
-                                "/api/artifacts/**", "/api/artifact-types/**",
-                                "/api/deities/**", "/api/dynasties/**",
-                                "/api/museums/**", "/api/regions/**")
-                        .permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
-                        .anyRequest().authenticated())
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        @Bean
+        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+                http
+                                .csrf(AbstractHttpConfigurer::disable)
+                                .sessionManagement(s -> s.sessionCreationPolicy(STATELESS))
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers("/api/admin/auth/**").permitAll()
 
-        return http.build();
-    }
+                                                // public reads
+                                                .requestMatchers(HttpMethod.GET,
+                                                                "/api/museums/**", "/api/artifacts/**",
+                                                                "/api/artifact-types/**", "/api/deities/**",
+                                                                "/api/dynasties/**", "/api/regions/**",
+                                                                "/api/exhibits/**")
+                                                .permitAll()
+                                                .requestMatchers("/api/admin/users/**").hasRole("ADMIN")
+                                                .requestMatchers("/api/admin/roles/**").hasRole("ADMIN")
+                                                .requestMatchers("/api/admin/logs/**").hasRole("ADMIN")
+                                                .requestMatchers(HttpMethod.POST,
+                                                                "/api/artifacts/**", "/api/exhibits/**",
+                                                                "/api/museums/**", "/api/dynasties/**",
+                                                                "/api/regions/**", "/api/deities/**")
+                                                .hasAnyRole("ADMIN", "CURATOR")
+                                                .requestMatchers(HttpMethod.PUT,
+                                                                "/api/artifacts/**", "/api/exhibits/**",
+                                                                "/api/museums/**", "/api/dynasties/**",
+                                                                "/api/regions/**", "/api/deities/**")
+                                                .hasAnyRole("ADMIN", "CURATOR")
+                                                .requestMatchers(HttpMethod.PATCH,
+                                                                "/api/artifacts/**", "/api/exhibits/**")
+                                                .hasAnyRole("ADMIN", "CURATOR")
+                                                .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
+                                                .anyRequest().authenticated())
+                                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+                return http.build();
+        }
 }

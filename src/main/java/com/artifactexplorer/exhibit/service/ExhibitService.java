@@ -29,6 +29,7 @@ import com.artifactexplorer.exhibit.repository.ExhibitArtifactRepository;
 import com.artifactexplorer.exhibit.repository.ExhibitRepository;
 import com.artifactexplorer.exhibit.repository.ExhibitRevisionRepository;
 import com.artifactexplorer.museum.repository.MuseumRepository;
+import com.artifactexplorer.common.IdGenerator;
 
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
@@ -50,7 +51,7 @@ public class ExhibitService {
     private final MuseumRepository          museumRepo;
     private final AdminUserRepository       adminUserRepo;
     private final AdminActionLogRepository  logRepo;
-
+    private final IdGenerator idGenerator;
     // ── Exhibit queries ───────────────────────────────────────
 
     public Page<ExhibitResponse> filter(ExhibitFilterRequest f) {
@@ -93,11 +94,10 @@ public class ExhibitService {
 
     @Transactional
     public ExhibitResponse create(ExhibitRequest req, String adminId) {
-        if (exhibitRepo.existsById(req.exhibitId()))
-            throw new IllegalArgumentException("Exhibit ID already exists: " + req.exhibitId());
         validateDates(req.startsOn(), req.endsOn());
 
         Exhibit e = new Exhibit();
+        e.setExhibitId(idGenerator.generate("EXH"));
         applyFields(e, req);
         e.setCreatedBy(resolveAdmin(adminId));
 
@@ -254,7 +254,6 @@ public class ExhibitService {
     }
 
     private void applyFields(Exhibit e, ExhibitRequest req) {
-        e.setExhibitId(req.exhibitId());
         e.setTitle(req.title());
         e.setDescription(req.description());
         e.setStartsOn(req.startsOn());

@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 
  // admin/dto/AdminUserRequest.java
 public record AdminUserRequest(
-    @NotBlank String adminId,
     @NotBlank String username,
     @NotBlank @Email String email,
     @NotBlank String roleId,

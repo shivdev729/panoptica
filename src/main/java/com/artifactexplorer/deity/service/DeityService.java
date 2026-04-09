@@ -8,8 +8,11 @@ import com.artifactexplorer.deity.dto.DeityRequest;
 import com.artifactexplorer.deity.dto.DeityResponse;
 import com.artifactexplorer.deity.entity.Deity;
 import com.artifactexplorer.deity.repository.DeityRepository;
+import com.artifactexplorer.common.IdGenerator;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.Id;
+
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
@@ -22,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 public class DeityService {
 
     private final DeityRepository repo;
+    private final IdGenerator idGenerator;
 
     public List<DeityResponse> findAll() {
         return repo.findAll().stream().map(DeityResponse::from).toList();
@@ -44,13 +48,12 @@ public class DeityService {
     }
 
     @Transactional
-    public DeityResponse create(DeityRequest req) {
-        if (repo.existsById(req.deityId()))
-            throw new IllegalArgumentException("Deity ID already exists: " + req.deityId());
+    public DeityResponse create(DeityRequest req,String creator) {
         Deity d = new Deity();
-        d.setDeityId(req.deityId());
+        d.setDeityId(idGenerator.generate("DEI"));
         d.setName(req.name());
         d.setTraditions(req.traditions() != null ? req.traditions() : new HashSet<>());
+        d.setCreatedBy(creator);
         return DeityResponse.from(repo.save(d));
     }
 

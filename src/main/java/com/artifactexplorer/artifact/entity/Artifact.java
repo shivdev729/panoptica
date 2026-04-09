@@ -99,6 +99,12 @@ public class Artifact {
     public String getName() {
         return name;
     }
+    public void setCreatedBy(String createdBy) {
+        this.audit.setCreatedBy(createdBy);
+    }
+    public void setUpdatedBy(String updatedBy) {
+        this.audit.setUpdatedBy(updatedBy);
+    }
     public void setName(String name) {
         this.name = name;
     }

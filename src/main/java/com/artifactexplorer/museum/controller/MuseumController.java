@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import com.artifactexplorer.museum.service.MuseumService;
 import com.artifactexplorer.museum.dto.MuseumRequest;
 import com.artifactexplorer.museum.dto.MuseumResponse;
+import org.springframework.security.core.Authentication;
 
 import jakarta.validation.Valid;
 
@@ -34,8 +35,8 @@ public class MuseumController {
     }
 
     @PostMapping
-    public ResponseEntity<MuseumResponse> create(@Valid @RequestBody MuseumRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(req));
+    public ResponseEntity<MuseumResponse> create(@Valid @RequestBody MuseumRequest req,Authentication auth) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(req, (String) auth.getPrincipal()));
     }
 
     @PutMapping("/{id}")

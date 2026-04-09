@@ -76,5 +76,7 @@ public class Region {
     public void setModernStates(Set<String> modernStates) {
         this.modernStates = modernStates;
     }
-    
+    public void setCreatedBy(String createdBy) {
+        this.audit.setCreatedBy(createdBy);
+    }
 }

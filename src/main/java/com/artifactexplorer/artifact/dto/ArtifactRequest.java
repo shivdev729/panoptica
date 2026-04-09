@@ -8,7 +8,6 @@ import java.util.Set;
 
 // artifact/dto/ArtifactRequest.java
 public record ArtifactRequest(
-    @NotBlank String artifactId,
     String name,
     String description,
     String typeId,

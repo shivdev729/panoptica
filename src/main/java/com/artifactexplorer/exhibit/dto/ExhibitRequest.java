@@ -8,7 +8,6 @@ import jakarta.validation.constraints.NotNull;
 
 // exhibit/dto/ExhibitRequest.java
 public record ExhibitRequest(
-    @NotBlank String exhibitId,
     @NotBlank String title,
     String description,
     @NotBlank String museumId,

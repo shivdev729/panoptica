@@ -69,4 +69,5 @@ public class Dynasty {
     public Set<Region> getRuledRegions() { return ruledRegions; }
     public void setRuledRegions(Set<Region> v) { ruledRegions = v; }
     public AuditFields getAudit() { return audit; }
+    public void setCreatedBy(String v) { audit.setCreatedBy(v); }
 }

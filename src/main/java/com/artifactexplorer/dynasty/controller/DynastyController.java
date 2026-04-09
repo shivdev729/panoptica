@@ -12,9 +12,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+
 import com.artifactexplorer.dynasty.dto.DynastyRequest;
 import com.artifactexplorer.dynasty.dto.DynastyResponse;
 import com.artifactexplorer.dynasty.service.DynastyService;
+
 import lombok.RequiredArgsConstructor;
 import jakarta.validation.Valid;
 
@@ -45,8 +48,8 @@ public class DynastyController {
     }
 
     @PostMapping
-    public ResponseEntity<DynastyResponse> create(@Valid @RequestBody DynastyRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(req));
+    public ResponseEntity<DynastyResponse> create(@Valid @RequestBody DynastyRequest req, Authentication auth) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(req,(String) auth.getPrincipal()));
     }
 
     @PutMapping("/{id}")

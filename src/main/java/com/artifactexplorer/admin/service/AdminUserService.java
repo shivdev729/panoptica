@@ -6,10 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 
 import com.artifactexplorer.admin.dto.AdminRoleRequest;
 import com.artifactexplorer.admin.dto.AdminRoleResponse;
@@ -26,6 +24,7 @@ import com.artifactexplorer.admin.repository.AdminRoleRepository;
 import com.artifactexplorer.admin.repository.AdminUserRepository;
 import com.artifactexplorer.common.ActionType;
 import com.artifactexplorer.common.security.JwtUtil;
+import com.artifactexplorer.common.IdGenerator;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,25 +32,35 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
- // admin/service/AdminUserService.java
+// admin/service/AdminUserService.java
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AdminUserService {
 
-    private final AdminUserRepository    userRepo;
-    private final AdminRoleRepository    roleRepo;
+    private final AdminUserRepository userRepo;
+    private final AdminRoleRepository roleRepo;
     private final AdminActionLogRepository logRepo;
-    private final JwtUtil                jwtUtil;
-    private final PasswordEncoder        passwordEncoder;
+    private final JwtUtil jwtUtil;
+    private final PasswordEncoder passwordEncoder;
+    private final IdGenerator idGenerator;
 
     // ── Auth ──────────────────────────────────────────────────
 
+    
     @Transactional
     public AuthResponse login(AuthRequest req) {
+        log.debug("Login attempt for username: {}", req.username());
+
         AdminUser user = userRepo.findByUsername(req.username())
                 .orElseThrow(() -> new EntityNotFoundException("Invalid credentials"));
+
+        log.debug("User found: {}, active: {}", user.getAdminId(), user.isActive());
+        log.debug("Stored hash: {}", user.getPasswordHash());
+        log.debug("Password matches: {}", passwordEncoder.matches(req.password(), user.getPasswordHash()));
 
         if (!user.isActive())
             throw new IllegalStateException("Account is disabled");
@@ -65,7 +74,7 @@ public class AdminUserService {
         String token = jwtUtil.generate(user.getAdminId(), user.getRole().getName());
         Instant expiresAt = Instant.now().plusMillis(jwtUtil.getExpirationMs());
 
-        log(user, ActionType.CREATE, "admin_user", user.getAdminId(), null, "login");
+        log.debug("Token generated successfully");
 
         return new AuthResponse(token, user.getAdminId(),
                 user.getUsername(), user.getRole().getName(), expiresAt);
@@ -85,8 +94,6 @@ public class AdminUserService {
 
     @Transactional
     public AdminUserResponse create(AdminUserRequest req, String performedBy) {
-        if (userRepo.existsById(req.adminId()))
-            throw new IllegalArgumentException("Admin ID already exists: " + req.adminId());
         if (userRepo.findByUsername(req.username()).isPresent())
             throw new IllegalArgumentException("Username already taken: " + req.username());
         if (userRepo.findByEmail(req.email()).isPresent())
@@ -96,7 +103,7 @@ public class AdminUserService {
                 .orElseThrow(() -> new EntityNotFoundException("Role not found: " + req.roleId()));
 
         AdminUser user = new AdminUser();
-        user.setAdminId(req.adminId());
+        user.setAdminId(idGenerator.generate("USR"));
         user.setUsername(req.username());
         user.setEmail(req.email());
         user.setRole(role);
@@ -169,10 +176,8 @@ public class AdminUserService {
 
     @Transactional
     public AdminRoleResponse createRole(AdminRoleRequest req, String performedBy) {
-        if (roleRepo.existsById(req.roleId()))
-            throw new IllegalArgumentException("Role ID already exists: " + req.roleId());
         AdminRole role = new AdminRole();
-        role.setRoleId(req.roleId());
+        role.setRoleId(idGenerator.generate("ROL"));
         role.setName(req.name());
         role.setPermissions(req.permissions() != null ? req.permissions() : new HashMap<>());
         AdminRole saved = roleRepo.save(role);
@@ -185,7 +190,8 @@ public class AdminUserService {
         AdminRole role = roleRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Role not found: " + id));
         role.setName(req.name());
-        if (req.permissions() != null) role.setPermissions(req.permissions());
+        if (req.permissions() != null)
+            role.setPermissions(req.permissions());
         AdminRole saved = roleRepo.save(role);
         log(performedBy, ActionType.UPDATE, "admin_role", id, null, "updated role");
         return AdminRoleResponse.from(saved);
@@ -202,7 +208,7 @@ public class AdminUserService {
     // ── Action log query ──────────────────────────────────────
 
     public Page<AdminActionLog> getLogs(String entityType, String entityId,
-                                        String adminId, Pageable pageable) {
+            String adminId, Pageable pageable) {
         if (entityType != null && entityId != null)
             return logRepo.findByEntityTypeAndEntityIdOrderByPerformedAtDesc(
                     entityType, entityId, pageable);
@@ -214,14 +220,14 @@ public class AdminUserService {
     // ── Helpers ───────────────────────────────────────────────
 
     private void log(AdminUser actor, ActionType action,
-                     String entityType, String entityId,
-                     Map<String, Object> diff, String note) {
+            String entityType, String entityId,
+            Map<String, Object> diff, String note) {
         log(actor.getAdminId(), action, entityType, entityId, diff, note);
     }
 
     private void log(String adminId, ActionType action,
-                     String entityType, String entityId,
-                     Map<String, Object> diff, String note) {
+            String entityType, String entityId,
+            Map<String, Object> diff, String note) {
         AdminActionLog entry = new AdminActionLog();
         userRepo.findById(adminId).ifPresent(entry::setAdmin);
         entry.setAction(action);
@@ -234,10 +240,9 @@ public class AdminUserService {
 
     private Map<String, Object> snapshot(AdminUser u) {
         return Map.of(
-            "username", u.getUsername(),
-            "email",    u.getEmail(),
-            "roleId",   u.getRole().getRoleId(),
-            "isActive", u.isActive()
-        );
+                "username", u.getUsername(),
+                "email", u.getEmail(),
+                "roleId", u.getRole().getRoleId(),
+                "isActive", u.isActive());
     }
-} 
+}

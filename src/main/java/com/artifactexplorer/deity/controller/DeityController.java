@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
 
 import com.artifactexplorer.deity.dto.DeityRequest;
 import com.artifactexplorer.deity.dto.DeityResponse;
@@ -48,8 +49,8 @@ public class DeityController {
     }
 
     @PostMapping
-    public ResponseEntity<DeityResponse> create(@Valid @RequestBody DeityRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(req));
+    public ResponseEntity<DeityResponse> create(@Valid @RequestBody DeityRequest req,Authentication auth) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(req,(String) auth.getPrincipal()));
     }
 
     @PutMapping("/{id}")

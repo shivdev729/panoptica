@@ -11,6 +11,7 @@ import com.artifactexplorer.artifact.repository.ArtifactTypeRepository;
 import com.artifactexplorer.dynasty.repository.DynastyRepository;
 import com.artifactexplorer.museum.repository.MuseumRepository;
 import com.artifactexplorer.common.ArtifactStatus;
+import com.artifactexplorer.common.IdGenerator;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,7 @@ public class ArtifactService {
     private final ArtifactRevisionRepository revisionRepo;
     private final DynastyRepository         dynastyRepo;
     private final MuseumRepository          museumRepo;
+    private final IdGenerator idGenerator;
 
     public Page<ArtifactResponse> filter(ArtifactFilterRequest f) {
         Pageable pageable = PageRequest.of(f.page(), f.size(), Sort.by("name"));
@@ -55,25 +57,27 @@ public class ArtifactService {
     }
 
     @Transactional
-    public ArtifactResponse create(ArtifactRequest req) {
-        if (artifactRepo.existsById(req.artifactId()))
-            throw new IllegalArgumentException("Artifact ID already exists: " + req.artifactId());
-        return ArtifactResponse.from(artifactRepo.save(buildArtifact(new Artifact(), req)));
+    public ArtifactResponse create(ArtifactRequest req,String createdBy) {
+
+        Artifact artifact = buildArtifact(new Artifact(), req);
+        artifact.setCreatedBy(createdBy);
+        return ArtifactResponse.from(artifactRepo.save(artifact));
     }
 
     @Transactional
-    public ArtifactResponse update(String id, ArtifactRequest req) {
+    public ArtifactResponse update(String id, ArtifactRequest req,String updatedBy) {
         Artifact a = artifactRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Artifact not found: " + id));
-        snapshotRevision(a);
+        snapshotRevision(a,updatedBy);
+        a.setUpdatedBy(updatedBy);
         return ArtifactResponse.from(artifactRepo.save(buildArtifact(a, req)));
     }
 
     @Transactional
-    public ArtifactResponse patch(String id, Map<String, Object> fields) {
+    public ArtifactResponse patch(String id, Map<String, Object> fields,String updatedBy) {
         Artifact a = artifactRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Artifact not found: " + id));
-        snapshotRevision(a);
+        snapshotRevision(a,updatedBy);
         if (fields.containsKey("status"))
             a.setStatus(ArtifactStatus.valueOf((String) fields.get("status")));
         if (fields.containsKey("name"))
@@ -97,7 +101,8 @@ public class ArtifactService {
     // ── helpers ──────────────────────────────────────────────
 
     private Artifact buildArtifact(Artifact a, ArtifactRequest req) {
-        a.setArtifactId(req.artifactId());
+        
+        a.setArtifactId(idGenerator.generate("ART"));
         a.setName(req.name());
         a.setDescription(req.description());
         a.setStatus(req.status() != null ? req.status() : ArtifactStatus.DRAFT);
@@ -114,10 +119,10 @@ public class ArtifactService {
         return a;
     }
 
-    private void snapshotRevision(Artifact a) {
+    private void snapshotRevision(Artifact a,String revisedBy) {
         ArtifactRevision rev = new ArtifactRevision();
         rev.setArtifact(a);
-        rev.setRevisedBy("system");   // replace with SecurityContext principal
+        rev.setRevisedBy(revisedBy);
         rev.setSnapshot(Map.of(
             "name", String.valueOf(a.getName()),
             "description", String.valueOf(a.getDescription()),

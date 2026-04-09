@@ -9,6 +9,7 @@ import com.artifactexplorer.dynasty.entity.Dynasty;
 import com.artifactexplorer.dynasty.repository.DynastyRepository;
 import lombok.RequiredArgsConstructor;
 import jakarta.persistence.EntityNotFoundException;
+import com.artifactexplorer.common.IdGenerator;
 
 // dynasty/service/DynastyService.java
 @Service
@@ -17,6 +18,7 @@ import jakarta.persistence.EntityNotFoundException;
 public class DynastyService {
 
     private final DynastyRepository repo;
+    private final IdGenerator idGenerator;
 
     public List<DynastyResponse> findAll() {
         return repo.findAll().stream().map(DynastyResponse::from).toList();
@@ -39,14 +41,14 @@ public class DynastyService {
     }
 
     @Transactional
-    public DynastyResponse create(DynastyRequest req) {
-        if (repo.existsById(req.dynastyId()))
-            throw new IllegalArgumentException("Dynasty ID already exists: " + req.dynastyId());
+    public DynastyResponse create(DynastyRequest req, String createdBy) {
+        
         Dynasty d = new Dynasty();
-        d.setDynastyId(req.dynastyId());
+        d.setDynastyId(idGenerator.generate("DYN"));
         d.setName(req.name());
         d.setPeriodStart(req.periodStart());
         d.setPeriodEnd(req.periodEnd());
+        d.setCreatedBy(createdBy);
         return DynastyResponse.from(repo.save(d));
     }
 

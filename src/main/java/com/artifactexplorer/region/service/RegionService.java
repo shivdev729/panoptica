@@ -3,15 +3,17 @@ package com.artifactexplorer.region.service;
 import java.util.HashSet;
 import java.util.List;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.Id;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.artifactexplorer.region.dto.RegionRequest;
 import com.artifactexplorer.region.dto.RegionResponse;
 import com.artifactexplorer.region.repository.RegionRepository;
 import com.artifactexplorer.region.entity.Region;
+import com.artifactexplorer.common.IdGenerator;
 
 import lombok.RequiredArgsConstructor;
-
 
 // region/service/RegionService.java
 @Service
@@ -20,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 public class RegionService {
 
     private final RegionRepository repo;
+    private final IdGenerator idGenerator;
 
     public List<RegionResponse> findAll() {
         return repo.findAll().stream().map(RegionResponse::from).toList();
@@ -42,13 +45,13 @@ public class RegionService {
     }
 
     @Transactional
-    public RegionResponse create(RegionRequest req) {
-        if (repo.existsById(req.regionId()))
-            throw new IllegalArgumentException("Region ID already exists: " + req.regionId());
+    public RegionResponse create(RegionRequest req,String creator) {
         Region r = new Region();
-        r.setRegionId(req.regionId());
+
+        r.setRegionId(idGenerator.generate("REG"));
         r.setName(req.name());
         r.setModernStates(req.modernStates() != null ? req.modernStates() : new HashSet<>());
+        r.setCreatedBy(creator);
         return RegionResponse.from(repo.save(r));
     }
 
@@ -57,7 +60,8 @@ public class RegionService {
         Region r = repo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Region not found: " + id));
         r.setName(req.name());
-        if (req.modernStates() != null) r.setModernStates(req.modernStates());
+        if (req.modernStates() != null)
+            r.setModernStates(req.modernStates());
         return RegionResponse.from(repo.save(r));
     }
 

@@ -9,6 +9,7 @@ import com.artifactexplorer.museum.repository.MuseumRepository;
 import com.artifactexplorer.museum.dto.MuseumRequest;
 import com.artifactexplorer.museum.dto.MuseumResponse;
 import jakarta.persistence.EntityNotFoundException;
+import com.artifactexplorer.common.IdGenerator;
 
 // museum/service/MuseumService.java
 @Service
@@ -17,6 +18,7 @@ import jakarta.persistence.EntityNotFoundException;
 public class MuseumService {
 
     private final MuseumRepository repo;
+    private final IdGenerator idGenerator;
 
     public List<MuseumResponse> findAll() {
         return repo.findAll().stream().map(MuseumResponse::from).toList();
@@ -34,11 +36,9 @@ public class MuseumService {
     }
 
     @Transactional
-    public MuseumResponse create(MuseumRequest req) {
-        if (req.museumId() != null && repo.existsById(req.museumId()))
-            throw new IllegalArgumentException("Museum ID already exists: " + req.museumId());
+    public MuseumResponse create(MuseumRequest req, String adminId) {
         Museum m = new Museum();
-        m.setMuseumId(req.museumId());
+        m.setMuseumId(idGenerator.generate("MUS"));
         m.setName(req.name());
         m.setLocation(req.location());
         return MuseumResponse.from(repo.save(m));

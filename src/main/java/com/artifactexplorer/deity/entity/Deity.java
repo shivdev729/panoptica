@@ -70,6 +70,9 @@ public class Deity {
     public void setTraditions(Set<String> traditions) {
         this.traditions = traditions;
     }
+    public void setCreatedBy(String createdBy) {
+        this.audit.setCreatedBy(createdBy);
+    }
     public AuditFields getAudit() {
         return audit;
     }
