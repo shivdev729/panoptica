@@ -26,5 +26,29 @@ public class Depicts {
     private String motif;
 
     // getters, setters
+    public DepictsId getId() {
+        return id;
+    }
+    public void setId(DepictsId id) {
+        this.id = id;
+    }
+    public Artifact getArtifact() {
+        return artifact;
+    }
+    public void setArtifact(Artifact artifact) {
+        this.artifact = artifact;
+    }
+    public Deity getDeity() {
+        return deity;
+    }
+    public void setDeity(Deity deity) {
+        this.deity = deity;
+    }
+    public String getMotif() {
+        return motif;
+    }
+    public void setMotif(String motif) {
+        this.motif = motif;
+    }
 }
 
