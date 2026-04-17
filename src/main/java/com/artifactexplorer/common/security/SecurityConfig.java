@@ -9,51 +9,54 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.filter.CorsFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
+import org.springframework.web.cors.CorsConfigurationSource;
 
-// common/security/SecurityConfig.java
+// ... other imports
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-        private final JwtFilter jwtFilter;
+    private final JwtFilter jwtFilter;
 
-        @Bean
-        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-                http
-                                .csrf(AbstractHttpConfigurer::disable)
-                                .sessionManagement(s -> s.sessionCreationPolicy(STATELESS))
-                                .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers("/api/admin/auth/**").permitAll()
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            // 1. MUST BE FIRST: Register CORS configuration
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(AbstractHttpConfigurer::disable)
+            .sessionManagement(s -> s.sessionCreationPolicy(STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                // OPTIONS must be permitted so the browser can "ask" if the request is allowed
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/api/admin/auth/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
+                .requestMatchers("/api/admin/users/**").hasRole("ADMIN")
+                // ... rest of your rules
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-                                                // public reads
-                                                .requestMatchers(HttpMethod.GET,
-                                                                "/api/museums/**", "/api/artifacts/**",
-                                                                "/api/artifact-types/**", "/api/deities/**",
-                                                                "/api/dynasties/**", "/api/regions/**",
-                                                                "/api/exhibits/**")
-                                                .permitAll()
-                                                .requestMatchers("/api/admin/users/**").hasRole("ADMIN")
-                                                .requestMatchers("/api/admin/roles/**").hasRole("ADMIN")
-                                                .requestMatchers("/api/admin/logs/**").hasRole("ADMIN")
-                                                .requestMatchers(HttpMethod.POST,
-                                                                "/api/artifacts/**", "/api/exhibits/**",
-                                                                "/api/museums/**", "/api/dynasties/**",
-                                                                "/api/regions/**", "/api/deities/**")
-                                                .hasAnyRole("ADMIN", "CURATOR")
-                                                .requestMatchers(HttpMethod.PUT,
-                                                                "/api/artifacts/**", "/api/exhibits/**",
-                                                                "/api/museums/**", "/api/dynasties/**",
-                                                                "/api/regions/**", "/api/deities/**")
-                                                .hasAnyRole("ADMIN", "CURATOR")
-                                                .requestMatchers(HttpMethod.PATCH,
-                                                                "/api/artifacts/**", "/api/exhibits/**")
-                                                .hasAnyRole("ADMIN", "CURATOR")
-                                                .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
-                                                .anyRequest().authenticated())
-                                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        return http.build();
+    }
 
-                return http.build();
-        }
+    // Use CorsConfigurationSource instead of CorsFilter bean for better integration
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        // Match this exactly to your frontend (check if you use port 3000 or 5173)
+        config.setAllowedOrigins(java.util.List.of("http://localhost:3000", "http://localhost:5173")); 
+        config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type", "Cache-Control"));
+        config.setAllowCredentials(true);
+        
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
 }

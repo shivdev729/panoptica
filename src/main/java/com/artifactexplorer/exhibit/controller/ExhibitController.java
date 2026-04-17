@@ -53,8 +53,10 @@ public class ExhibitController {
 
     @GetMapping("/active")
     public ResponseEntity<List<ExhibitResponse>> active(
-            @RequestParam String museumId) {
-        return ResponseEntity.ok(service.findActiveByMuseum(museumId));
+            @RequestParam(required = false) String museumId) {
+        if (museumId != null && !museumId.isBlank())
+            return ResponseEntity.ok(service.findActiveByMuseum(museumId));
+        return ResponseEntity.ok(service.findAllActive());
     }
 
     @GetMapping("/{id}/lineup")

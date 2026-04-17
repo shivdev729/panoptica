@@ -8,15 +8,20 @@ import com.artifactexplorer.common.ArtifactStatus;
 public record ArtifactFilterRequest(
     String typeId,
     String dynastyId,
+    String dynastyName,
     String museumId,
-    String regionId,       // filters via dynasty → ruled → region
+    String museumName,
     String material,
     ArtifactStatus status,
     String name,
-    int page,
-    int size
+    String regionId,       // filters via dynasty → ruled → region
+    String regionName,
+    Integer page,
+    Integer size
 ) {
     public ArtifactFilterRequest {
+        page = (page == null) ? 0 : page;
+        size = (size == null) ? 10 : size;
         if (page < 0) page = 0;
         if (size <= 0 || size > 100) size = 20;
     }

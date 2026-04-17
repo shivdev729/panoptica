@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
+import com.artifactexplorer.dynasty.dto.DynastyEntryResponse;
 import com.artifactexplorer.dynasty.dto.DynastyRequest;
 import com.artifactexplorer.dynasty.dto.DynastyResponse;
 import com.artifactexplorer.dynasty.service.DynastyService;
@@ -23,6 +25,7 @@ import jakarta.validation.Valid;
 
 // dynasty/controller/DynastyController.java
 @RestController
+@CrossOrigin
 @RequestMapping("/api/dynasties")
 @RequiredArgsConstructor
 public class DynastyController {
@@ -43,9 +46,16 @@ public class DynastyController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DynastyResponse> get(@PathVariable String id) {
-        return ResponseEntity.ok(service.findById(id));
+    public ResponseEntity<DynastyEntryResponse> get(@PathVariable String id) {
+        DynastyResponse response = service.findById(id);
+        List<String> ruledStates = service.getRuledStates(id);
+        return ResponseEntity.ok(new DynastyEntryResponse(
+            response.dynastyId(), response
+            .name(), response.periodStart(), response.periodEnd(),
+            response.createdAt(), response.updatedAt(), ruledStates
+        ));
     }
+
 
     @PostMapping
     public ResponseEntity<DynastyResponse> create(@Valid @RequestBody DynastyRequest req, Authentication auth) {

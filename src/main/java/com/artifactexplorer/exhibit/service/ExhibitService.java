@@ -54,42 +54,44 @@ public class ExhibitService {
     private final IdGenerator idGenerator;
     // ── Exhibit queries ───────────────────────────────────────
 
-    public Page<ExhibitResponse> filter(ExhibitFilterRequest f) {
-        Pageable pageable = PageRequest.of(f.page(), f.size(),
-                Sort.by("startsOn").ascending());
-
-        if (f.from() != null && f.to() != null)
-            return exhibitRepo.findUpcoming(f.from(), f.to(), pageable)
-                    .map(ExhibitResponse::from);
-
-        if (f.museumId() != null && f.status() != null)
-            return exhibitRepo.findByStatusAndMuseum_MuseumId(
-                    f.status(), f.museumId(), pageable)
-                    .map(ExhibitResponse::from);
-
-        if (f.museumId() != null)
-            return exhibitRepo.findByMuseum_MuseumIdOrderByStartsOnAsc(
-                    f.museumId(), pageable)
-                    .map(ExhibitResponse::from);
-
-        if (f.status() != null)
-            return exhibitRepo.findByStatusOrderByStartsOnAsc(f.status(), pageable)
-                    .map(ExhibitResponse::from);
-
-        return exhibitRepo.findAll(pageable).map(ExhibitResponse::from);
-    }
-
-    public ExhibitResponse findById(String id) {
+     public ExhibitResponse findById(String id) {
         return exhibitRepo.findById(id)
                 .map(ExhibitResponse::from)
                 .orElseThrow(() -> new EntityNotFoundException("Exhibit not found: " + id));
     }
+    @Transactional(readOnly = true)
+    public Page<ExhibitResponse> filter(ExhibitFilterRequest f) {
+        Pageable pageable = PageRequest.of(f.page(), f.size(),
+                Sort.by("startsOn").ascending());
 
+        return exhibitRepo.filter(
+                nullIfBlank(f.museumId()),
+                nullIfBlank(f.museumName()),
+                nullIfBlank(f.regionName()),
+                nullIfBlank(f.title()),
+                f.status(),
+                f.from(),
+                f.to(),
+                f.isRecurring(),
+                pageable).map(ExhibitResponse::from);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ExhibitResponse> findAllActive() {
+        return exhibitRepo.findAllActive(LocalDate.now())
+                .stream().map(ExhibitResponse::from).toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<ExhibitResponse> findActiveByMuseum(String museumId) {
         return exhibitRepo.findActiveByMuseum(museumId, LocalDate.now())
                 .stream().map(ExhibitResponse::from).toList();
     }
 
+    // helper used in multiple methods
+    private static String nullIfBlank(String s) {
+        return (s == null || s.isBlank()) ? null : s;
+    }
     // ── Exhibit mutations ─────────────────────────────────────
 
     @Transactional

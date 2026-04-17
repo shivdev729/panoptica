@@ -16,9 +16,34 @@ import org.springframework.stereotype.Repository;
 // exhibit/repository/ExhibitRepository.java
 @Repository
 public interface ExhibitRepository extends JpaRepository<Exhibit, String> {
+        @Query("""
+        SELECT DISTINCT e FROM Exhibit e
+        LEFT JOIN e.museum m
+        WHERE (:museumId    IS NULL OR m.museumId                            = :museumId)
+          AND (:museumName  IS NULL OR LOWER(m.name) LIKE LOWER(CONCAT('%', :museumName, '%')))
+          AND (:regionName  IS NULL OR LOWER(m.location) LIKE LOWER(CONCAT('%', :regionName, '%')))
+          AND (:status      IS NULL OR e.status                              = :status)
+          AND (:title       IS NULL OR LOWER(e.title) LIKE LOWER(CONCAT('%', :title, '%')))
+          AND (:from        IS NULL OR e.startsOn                           >= :from)
+          AND (:to          IS NULL OR e.startsOn                           <= :to)
+          AND (:isRecurring IS NULL OR e.isRecurring                        = :isRecurring)
+        """)
+    Page<Exhibit> filter(
+        @Param("museumId")    String museumId,
+        @Param("museumName")  String museumName,
+        @Param("regionName")    String regionName,
+        @Param("title")       String title,
+        @Param("status")      ExhibitStatus status,
+        @Param("from")        LocalDate from,
+        @Param("to")          LocalDate to,
+        @Param("isRecurring") Boolean isRecurring,
+        Pageable pageable
+    );
     List<Exhibit> findByStatus(ExhibitStatus status);
 
     List<Exhibit> findByMuseum_MuseumId(String museumId);
+
+    List<Exhibit> findAllActive(@Param("today") LocalDate today);
 
     // exhibit/repository/ExhibitRepository.java — additions
     Page<Exhibit> findByStatusOrderByStartsOnAsc(ExhibitStatus status, Pageable pageable);

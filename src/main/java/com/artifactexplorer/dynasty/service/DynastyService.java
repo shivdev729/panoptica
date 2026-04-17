@@ -1,11 +1,14 @@
 package com.artifactexplorer.dynasty.service;
 
 import java.util.List;
+import java.util.Set;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.artifactexplorer.dynasty.dto.DynastyRequest;
 import com.artifactexplorer.dynasty.dto.DynastyResponse;
 import com.artifactexplorer.dynasty.entity.Dynasty;
+import com.artifactexplorer.region.entity.Region;
 import com.artifactexplorer.dynasty.repository.DynastyRepository;
 import lombok.RequiredArgsConstructor;
 import jakarta.persistence.EntityNotFoundException;
@@ -29,7 +32,14 @@ public class DynastyService {
                 .map(DynastyResponse::from)
                 .orElseThrow(() -> new EntityNotFoundException("Dynasty not found: " + id));
     }
-
+    public List<String> getRuledStates(String id) {
+        Dynasty d
+                = repo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Dynasty not found: " + id));    
+        Set<Region> ruledRegions = d.getRuledRegions();
+        return ruledRegions.stream().map(Region::getModernStates).flatMap(Set::stream).map(String::toUpperCase).toList();
+    }   
+    
     public List<DynastyResponse> search(String name) {
         return repo.findByNameContainingIgnoreCase(name)
                 .stream().map(DynastyResponse::from).toList();
